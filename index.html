@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JanSaarthi AI — Secure Sign In</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&family=Noto+Sans+Gujarati:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink1:#241F5C; --ink1-700:#342A8C; --violet:#6C4CE0; --violet-100:#F1EEFC;
+    --coral:#FF6B4A; --coral-dark:#E14E30; --mint:#12B6A0; --gold:#FFD166;
+    --bg:#F6F5FB; --card:#FFFFFF; --ink:#1C1B33; --ink-soft:#6B6A85; --line:#E6E4F2;
+    --good:#1E9E6E; --good-bg:#E5F8F0; --warn:#D14328; --warn-bg:#FDEAE5; --amber:#B9820F; --amber-bg:#FFF6E2;
+    --radius:18px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; min-height:100vh; font-family:'Inter',sans-serif; color:var(--ink);
+    background:
+      radial-gradient(1000px 550px at 88% -8%, rgba(245, 199, 94, 0.2), transparent 60%),
+      radial-gradient(1000px 650px at -10% 108%, rgba(102, 65, 235, 0.3), transparent 60%),
+      linear-gradient(160deg, #6b60db 0%, #796eda 55%, #5d55bd 100%);
+    display:flex; align-items:center; justify-content:center; padding:28px 16px;}
+  body.lang-hi, body.lang-mr{ font-family:'Noto Sans Devanagari','Inter',sans-serif; }
+  body.lang-gu{ font-family:'Noto Sans Gujarati','Inter',sans-serif; }
+  h1,h2,.brand .name,.step-title{ font-family:'Sora','Inter',sans-serif; }
+  body.lang-hi h1, body.lang-mr h1, body.lang-hi .step-title, body.lang-mr .step-title, body.lang-hi .brand .name, body.lang-mr .brand .name{font-family:'Noto Sans Devanagari','Sora',sans-serif;}
+  body.lang-gu h1, body.lang-gu .step-title, body.lang-gu .brand .name{font-family:'Noto Sans Gujarati','Sora',sans-serif;}
+
+  .wrap{width:100%; max-width:430px;}
+  .topbar{display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;}
+  .brand{display:flex; align-items:center; gap:10px; color:#fff;}
+  .brand .logo{width:40px; height:40px; border-radius:12px; box-shadow:0 6px 16px rgba(0,0,0,.35); flex-shrink:0;}
+  .brand .logo svg{width:100%; height:100%; display:block;}
+  .brand .name{font-weight:800; font-size:19px; line-height:1.15;}
+  .brand .name small{display:block; font-family:'Inter'; font-weight:500; font-size:11px; color:#C9C3F0; letter-spacing:.01em;}
+
+  .lang-switch{display:flex; gap:3px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.18); padding:3px; border-radius:10px;}
+  .lang-switch button{border:none; background:transparent; color:#D9D5F5; font-size:11.5px; font-weight:700; padding:6px 8px; border-radius:7px; cursor:pointer; font-family:inherit;}
+  .lang-switch button.active{background:#fff; color:var(--ink1);}
+
+  .card{background:var(--card); border-radius:22px; padding:26px 24px 22px; box-shadow:0 30px 70px rgba(15,10,50,0.45); animation:rise .45s ease both;}
+  @keyframes rise{from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);}}
+  .step-title{font-weight:700; font-size:20px; color:var(--ink1); margin:0 0 4px;}
+  .step-sub{font-size:13px; color:var(--ink-soft); margin-bottom:18px; line-height:1.5;}
+
+  .progress{display:flex; gap:6px; margin-bottom:20px;}
+  .progress .seg{flex:1; height:4px; border-radius:999px; background:var(--line);}
+  .progress .seg.done{background:var(--violet);}
+
+  .role-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:6px;}
+  .role-card{border:1.5px solid var(--line); border-radius:16px; padding:18px 12px; text-align:center; cursor:pointer; transition:.15s; background:#FCFCFE;}
+  .role-card:hover{border-color:var(--violet); transform:translateY(-1px);}
+  .role-card.selected{border-color:var(--violet); background:var(--violet-100); box-shadow:0 0 0 3px rgba(108,76,224,0.12);}
+  .role-card .ic{width:34px; height:34px; margin:0 auto 10px; color:var(--ink1);}
+  .role-card .ic svg{width:100%; height:100%;}
+  .role-card .h{font-weight:700; font-size:14px; color:var(--ink1);}
+  .role-card .p{font-size:11.5px; color:var(--ink-soft); margin-top:3px; line-height:1.4;}
+
+  label.field{display:block; margin-bottom:14px;}
+  label.field .lbl{display:block; font-size:12.5px; font-weight:700; color:var(--ink1); margin-bottom:6px;}
+  label.field input{width:100%; padding:12px 13px; border-radius:12px; border:1.5px solid var(--line); font-size:14.5px; font-family:inherit; background:#FCFCFE;}
+  label.field input:focus{outline:none; border-color:var(--violet); box-shadow:0 0 0 3px rgba(108,76,224,0.12);}
+  .field-hint{font-size:11.5px; color:var(--ink-soft); margin-top:5px;}
+
+  .otp-row{display:flex; gap:8px; margin:6px 0 4px;}
+  .otp-row input{width:100%; text-align:center; font-size:19px; font-weight:700; padding:12px 0; border-radius:12px; border:1.5px solid var(--line); font-family:inherit; color:var(--ink1); background:#FCFCFE;}
+  .otp-row input:focus{outline:none; border-color:var(--violet); box-shadow:0 0 0 3px rgba(108,76,224,0.12);}
+
+  .btn{width:100%; padding:13px 10px; border-radius:13px; border:none; font-weight:700; font-size:14.5px; cursor:pointer; font-family:inherit; transition:.15s;}
+  .btn-primary{background:linear-gradient(135deg, var(--ink1) 0%, var(--violet) 100%); color:#fff;}
+  .btn-primary:hover{filter:brightness(1.06);}
+  .btn-primary:disabled{opacity:.45; cursor:not-allowed; filter:none;}
+  .btn-ghost{background:transparent; color:var(--ink1); border:1.5px solid var(--line); margin-top:8px;}
+  .btn-link{background:none; border:none; color:var(--violet); font-weight:700; font-size:12.5px; cursor:pointer; font-family:inherit; padding:6px 0;}
+
+  .error-box{background:var(--warn-bg); color:#8a2f1f; border-radius:11px; padding:10px 12px; font-size:12.5px; font-weight:600; margin-bottom:14px; display:none;}
+  .info-box{background:var(--violet-100); color:#332872; border-radius:11px; padding:10px 12px; font-size:12px; margin-bottom:14px; line-height:1.5;}
+  .lock-box{background:var(--warn-bg); color:#7a2e1f; border-radius:12px; padding:16px; text-align:center; font-size:13.5px; line-height:1.6;}
+
+  .twofa-tag{display:inline-flex; align-items:center; gap:6px; background:var(--good-bg); color:var(--good); font-size:11px; font-weight:700; padding:5px 10px; border-radius:999px; margin-bottom:12px;}
+  .twofa-tag svg{width:13px; height:13px;}
+
+  .shield-note{display:flex; gap:9px; align-items:flex-start; background:var(--bg); border-radius:12px; padding:11px 12px; margin-top:16px; font-size:12px; color:var(--ink-soft); line-height:1.5;}
+  .shield-note .ic{width:17px; height:17px; flex-shrink:0; color:var(--ink1); margin-top:1px;}
+
+  .success-wrap{text-align:center; padding:6px 0;}
+  .success-wrap .check{width:58px; height:58px; border-radius:50%; background:var(--good-bg); color:var(--good); display:flex; align-items:center; justify-content:center; margin:0 auto 14px;}
+  .success-wrap .check svg{width:28px; height:28px;}
+
+  .foot{text-align:center; color:#C9C3F0; font-size:11.5px; margin-top:16px;}
+  .back-link{color:var(--ink-soft); font-size:12.5px; cursor:pointer; display:inline-flex; align-items:center; gap:4px; margin-bottom:12px; background:none; border:none; font-family:inherit; padding:0;}
+
+  .tabs{display:flex; gap:6px; background:var(--bg); padding:4px; border-radius:13px; margin-bottom:18px;}
+  .tabs button{flex:1; border:none; background:transparent; padding:9px 6px; border-radius:9px; font-weight:700; font-size:12.5px; color:var(--ink-soft); cursor:pointer; font-family:inherit;}
+  .tabs button.active{background:#fff; color:var(--ink1); box-shadow:0 2px 6px rgba(0,0,0,0.08);}
+
+  .row-2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .link-row{text-align:right; margin:-6px 0 14px;}
+  .link-row button{background:none; border:none; color:var(--violet); font-weight:700; font-size:12px; cursor:pointer; font-family:inherit; padding:0;}
+  .pw-rules{font-size:11px; color:var(--ink-soft); margin:-8px 0 14px; line-height:1.5;}
+</style>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#241F5C">
+<link rel="apple-touch-icon" href="icon-192.png">
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand">
+      <div class="logo">
+        <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs><linearGradient id="jsGradTop" x1="4" y1="6" x2="58" y2="58" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#3A2E8C"/><stop offset="0.55" stop-color="#6C4CE0"/><stop offset="1" stop-color="#FF6B4A"/>
+          </linearGradient></defs>
+          <rect x="2" y="2" width="60" height="60" rx="18" fill="url(#jsGradTop)"/>
+          <path d="M20 44 C20 30, 28 20, 44 18" stroke="#fff" stroke-width="5" stroke-linecap="round" fill="none" opacity="0.35"/>
+          <path d="M20 44 L20 24 C20 20.7 22.7 18 26 18 L34 18" stroke="#fff" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          <circle cx="45" cy="19" r="5.5" fill="#FFD166"/>
+        </svg>
+      </div>
+      <div class="name">JanSaarthi AI<small data-i18n="brand.tag">Secure sign-in · live backend</small></div>
+    </div>
+    <div class="lang-switch">
+      <button id="lb-en" class="active" onclick="setLang('en')">EN</button>
+      <button id="lb-hi" onclick="setLang('hi')">हिं</button>
+      <button id="lb-mr" onclick="setLang('mr')">मरा</button>
+      <button id="lb-gu" onclick="setLang('gu')">ગુજ</button>
+    </div>
+  </div>
+
+  <div class="card">
+
+    <!-- STEP: ROLE -->
+    <div class="step" id="step-role">
+      <h1 class="step-title" data-i18n="role.title">Who's signing in?</h1>
+      <div class="step-sub" data-i18n="role.sub">Choose your role — you'll land on different consoles.</div>
+      <div class="role-grid">
+        <div class="role-card" id="role-customer" onclick="pickRole('customer')">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c1.3-3.8 4.3-5.8 7.5-5.8s6.2 2 7.5 5.8"/></svg></div>
+          <div class="h" data-i18n="role.customer.h">Customer</div>
+          <div class="p" data-i18n="role.customer.p">Your JanSaarthi banking app</div>
+        </div>
+        <div class="role-card" id="role-bank" onclick="pickRole('bank')">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 4l9 6.5"/><path d="M5 10.5V19h14v-8.5"/><path d="M9.5 19v-5h5v5"/></svg></div>
+          <div class="h" data-i18n="role.bank.h">Bank officer</div>
+          <div class="p" data-i18n="role.bank.p">Officer console &amp; queues</div>
+        </div>
+      </div>
+      <button class="btn btn-primary" style="margin-top:18px;" id="role-continue" disabled onclick="goScreen('auth')" data-i18n="btn.continue">Continue</button>
+    </div>
+
+    <!-- SCREEN: SIGN IN / CREATE ACCOUNT / FORGOT — tabs -->
+    <div class="step" id="screen-auth" style="display:none;">
+      <button class="back-link" onclick="goScreen('role')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+        <span data-i18n="nav.changeRole">Change role</span>
+      </button>
+      <div class="tabs">
+        <button id="tab-signin" class="active" onclick="setTab('signin')" data-i18n="tab.signin">Sign in</button>
+        <button id="tab-register" onclick="setTab('register')" data-i18n="tab.register">Create account</button>
+        <button id="tab-forgot" onclick="setTab('forgot')" data-i18n="tab.forgot">Forgot password</button>
+      </div>
+
+      <!-- SIGN IN FORM -->
+      <div id="pane-signin">
+        <h1 class="step-title" id="signin-title" data-i18n="signin.title">Enter your details</h1>
+        <div class="twofa-tag">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"/></svg>
+          <span data-i18n="signin.2fa">Two-factor verification</span>
+        </div>
+        <div class="step-sub" data-i18n="signin.sub">Password, then a one-time code sent to your real mobile number.</div>
+        <div class="error-box" id="signin-error"></div>
+        <label class="field">
+          <span class="lbl" id="signin-id-label" data-i18n="signin.idLabel">Registered mobile number</span>
+          <input type="text" id="signin-phone" placeholder="98xxxxxxxx" maxlength="10" inputmode="numeric">
+        </label>
+        <label class="field">
+          <span class="lbl" data-i18n="field.password">Password</span>
+          <input type="password" id="signin-password" data-i18n-placeholder="signin.pwPlaceholder" placeholder="Enter password">
+        </label>
+        <div class="link-row"><button onclick="setTab('forgot')" data-i18n="signin.forgot">Forgot password?</button></div>
+        <button class="btn btn-primary" id="signin-submit" onclick="doLogin()" data-i18n="btn.continue">Continue</button>
+        <div class="lock-box" id="signin-lock" style="display:none; margin-top:14px;"></div>
+      </div>
+
+      <!-- REGISTER FORM -->
+      <div id="pane-register" style="display:none;">
+        <h1 class="step-title" data-i18n="register.title">Create your account</h1>
+        <div class="step-sub" id="register-sub" data-i18n="register.sub">This creates a real row in the customer database and verifies your real phone number by OTP.</div>
+        <div class="error-box" id="register-error"></div>
+        <label class="field">
+          <span class="lbl" data-i18n="field.fullName">Full name</span>
+          <input type="text" id="reg-name" data-i18n-placeholder="register.namePlaceholder" placeholder="As per your ID">
+        </label>
+        <div class="row-2">
+          <label class="field">
+            <span class="lbl" data-i18n="field.mobile">Mobile number</span>
+            <input type="text" id="reg-phone" placeholder="98xxxxxxxx" maxlength="10" inputmode="numeric">
+          </label>
+          <label class="field">
+            <span class="lbl" data-i18n="field.emailOpt">Email (optional)</span>
+            <input type="email" id="reg-email" placeholder="you@example.com">
+          </label>
+        </div>
+        <label class="field" id="reg-branch-field" style="display:none;">
+          <span class="lbl" data-i18n="field.branch">Branch</span>
+          <input type="text" id="reg-branch" data-i18n-placeholder="register.branchPlaceholder" placeholder="e.g. Ahmedabad Main">
+        </label>
+        <label class="field">
+          <span class="lbl" data-i18n="field.password">Password</span>
+          <input type="password" id="reg-password" data-i18n-placeholder="register.pwPlaceholder" placeholder="Create a password">
+        </label>
+        <div class="pw-rules" data-i18n="register.pwRules">Minimum 8 characters, with an uppercase letter, a lowercase letter and a number.</div>
+        <label class="field">
+          <span class="lbl" data-i18n="field.confirmPassword">Confirm password</span>
+          <input type="password" id="reg-password2" data-i18n-placeholder="register.pw2Placeholder" placeholder="Re-enter password">
+        </label>
+        <button class="btn btn-primary" onclick="doRegister()" data-i18n="register.submit">Create account &amp; send OTP</button>
+      </div>
+
+      <!-- FORGOT PASSWORD: request OTP -->
+      <div id="pane-forgot" style="display:none;">
+        <h1 class="step-title" data-i18n="forgot.title">Reset your password</h1>
+        <div class="step-sub" data-i18n="forgot.sub">We'll send a one-time code to your registered mobile number.</div>
+        <div class="error-box" id="forgot-error"></div>
+        <div class="info-box" id="forgot-info" style="display:none;"></div>
+        <label class="field">
+          <span class="lbl" data-i18n="signin.idLabel">Registered mobile number</span>
+          <input type="text" id="forgot-phone" placeholder="98xxxxxxxx" maxlength="10" inputmode="numeric">
+        </label>
+        <button class="btn btn-primary" onclick="doForgotPassword()" data-i18n="forgot.submit">Send OTP</button>
+      </div>
+    </div>
+
+    <!-- SCREEN: OTP (shared for register / login / reset) -->
+    <div class="step" id="screen-otp" style="display:none;">
+      <h1 class="step-title" data-i18n="otp.title">Verify your phone</h1>
+      <div class="step-sub" id="otp-sub" data-i18n="otp.sub">We've sent a 6-digit code to your registered mobile number.</div>
+      <div class="error-box" id="otp-error"></div>
+
+      <label class="field" id="otp-newpw-field" style="display:none;">
+        <span class="lbl" data-i18n="otp.newPw">New password</span>
+        <input type="password" id="otp-newpw" data-i18n-placeholder="otp.newPwPlaceholder" placeholder="Create a new password">
+      </label>
+
+      <div class="otp-row">
+        <input type="text" maxlength="1" class="otp-box" data-i="0">
+        <input type="text" maxlength="1" class="otp-box" data-i="1">
+        <input type="text" maxlength="1" class="otp-box" data-i="2">
+        <input type="text" maxlength="1" class="otp-box" data-i="3">
+        <input type="text" maxlength="1" class="otp-box" data-i="4">
+        <input type="text" maxlength="1" class="otp-box" data-i="5">
+      </div>
+      <div class="field-hint" id="otp-dev-hint" data-i18n="otp.devHint">Backend running with SMS_PROVIDER=console prints the OTP in the backend terminal for local testing. Switch to a real provider (see backend README) to receive it as an actual text message.</div>
+      <button class="btn btn-primary" style="margin-top:14px;" id="otp-submit" onclick="submitOtp()" data-i18n="otp.verify">Verify</button>
+      <button class="btn-link" onclick="resendOtp()" id="resend-btn" data-i18n="otp.resend">Resend code</button>
+    </div>
+
+    <!-- SCREEN: SUCCESS -->
+    <div class="step" id="screen-success" style="display:none;">
+      <div class="success-wrap">
+        <div class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div>
+        <h1 class="step-title" data-i18n="success.title">You're verified</h1>
+        <div class="step-sub" id="success-sub" data-i18n="success.sub">Welcome to JanSaarthi AI.</div>
+        <a class="btn btn-primary" id="success-link" style="display:block; text-decoration:none; text-align:center; line-height:1.4; padding-top:13px;" href="#" data-i18n="success.continue">Continue</a>
+      </div>
+    </div>
+
+    <div class="shield-note">
+      <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"/></svg></div>
+      <div data-i18n="shield.note">Passwords are hashed (never stored in plain text) and every OTP is single-use and expires in a few minutes. This screen talks to a real Node.js backend and a real SQLite customer database — see the included README to run it.</div>
+    </div>
+  </div>
+  <div class="foot" data-i18n="foot.tag">JanSaarthi AI · full-stack demo</div>
+</div>
+
+<script src="api.js"></script>
+<script>
+/* ============== I18N ============== */
+const I18N = {
+  en: {
+    'brand.tag':"Secure sign-in · live backend",
+    'role.title':"Who's signing in?", 'role.sub':"Choose your role — you'll land on different consoles.",
+    'role.customer.h':"Customer", 'role.customer.p':"Your JanSaarthi banking app",
+    'role.bank.h':"Bank officer", 'role.bank.p':"Officer console & queues",
+    'btn.continue':"Continue", 'nav.changeRole':"Change role",
+    'tab.signin':"Sign in", 'tab.register':"Create account", 'tab.forgot':"Forgot password",
+    'signin.title':"Enter your details", 'signin.2fa':"Two-factor verification",
+    'signin.sub':"Password, then a one-time code sent to your real mobile number.",
+    'signin.idLabel':"Registered mobile number", 'signin.idLabelOfficer':"Registered mobile number (officer)",
+    'signin.pwPlaceholder':"Enter password", 'signin.forgot':"Forgot password?",
+    'field.password':"Password", 'field.fullName':"Full name", 'field.mobile':"Mobile number",
+    'field.emailOpt':"Email (optional)", 'field.branch':"Branch", 'field.confirmPassword':"Confirm password",
+    'register.title':"Create your account",
+    'register.sub':"This creates a real row in the customer database and verifies your real phone number by OTP.",
+    'register.namePlaceholder':"As per your ID", 'register.branchPlaceholder':"e.g. Ahmedabad Main",
+    'register.pwPlaceholder':"Create a password", 'register.pw2Placeholder':"Re-enter password",
+    'register.pwRules':"Minimum 8 characters, with an uppercase letter, a lowercase letter and a number.",
+    'register.submit':"Create account & send OTP",
+    'forgot.title':"Reset your password", 'forgot.sub':"We'll send a one-time code to your registered mobile number.",
+    'forgot.submit':"Send OTP",
+    'otp.title':"Verify your phone", 'otp.sub':"We've sent a 6-digit code to your registered mobile number.",
+    'otp.newPw':"New password", 'otp.newPwPlaceholder':"Create a new password",
+    'otp.devHint':"Backend running with SMS_PROVIDER=console prints the OTP in the backend terminal for local testing. Switch to a real provider (see backend README) to receive it as an actual text message.",
+    'otp.verify':"Verify", 'otp.resend':"Resend code", 'otp.resent':"Code resent ✓",
+    'otp.verifying':"Verifying…", 'otp.checking':"Checking…",
+    'success.title':"You're verified", 'success.sub':"Welcome to JanSaarthi AI.", 'success.continue':"Continue",
+    'shield.note':"Passwords are hashed (never stored in plain text) and every OTP is single-use and expires in a few minutes. This screen talks to a real Node.js backend and a real SQLite customer database — see the included README to run it.",
+    'foot.tag':"JanSaarthi AI · full-stack demo",
+    'err.phonePw':"Enter your 10-digit mobile number and password.",
+    'err.phoneValid':"Enter a valid 10-digit mobile number.",
+    'err.pwMismatch':"Passwords do not match.", 'err.otpLen':"Enter the full 6-digit code.",
+    'err.noNewPw':"Enter a new password.",
+    'msg.otpSentTo':"We've sent a 6-digit code to your mobile {phone}.",
+    'msg.otpSentActivate':"We've sent a 6-digit code to your mobile {phone} to activate your account.",
+    'msg.otpMaybeSent':"If that account exists, a 6-digit code has been sent to it. Enter the code and your new password below.",
+    'msg.pwResetDone':"Your password has been reset. Please sign in with your new password.",
+    'msg.backToSignin':"Back to sign in",
+    'msg.loginSuccessOfficer':"Password and mobile OTP verified — welcome back, Officer.",
+    'msg.loginSuccessCustomer':"Password and mobile OTP verified — welcome back.",
+    'msg.continueOfficer':"Continue to Officer Console", 'msg.continueCustomer':"Continue to my JanSaarthi app",
+    'msg.attemptsLeft':" ({n} attempt(s) left)",
+  },
+  hi: {
+    'brand.tag':"सुरक्षित साइन-इन · लाइव बैकएंड",
+    'role.title':"कौन साइन इन कर रहा है?", 'role.sub':"अपनी भूमिका चुनें — आप अलग-अलग कंसोल पर पहुँचेंगे।",
+    'role.customer.h':"ग्राहक", 'role.customer.p':"आपका JanSaarthi बैंकिंग ऐप",
+    'role.bank.h':"बैंक अधिकारी", 'role.bank.p':"अधिकारी कंसोल और कतारें",
+    'btn.continue':"जारी रखें", 'nav.changeRole':"भूमिका बदलें",
+    'tab.signin':"साइन इन", 'tab.register':"खाता बनाएं", 'tab.forgot':"पासवर्ड भूल गए",
+    'signin.title':"अपना विवरण दर्ज करें", 'signin.2fa':"टू-फैक्टर सत्यापन",
+    'signin.sub':"पासवर्ड, फिर आपके वास्तविक मोबाइल नंबर पर भेजा गया एक बार का कोड।",
+    'signin.idLabel':"पंजीकृत मोबाइल नंबर", 'signin.idLabelOfficer':"पंजीकृत मोबाइल नंबर (अधिकारी)",
+    'signin.pwPlaceholder':"पासवर्ड दर्ज करें", 'signin.forgot':"पासवर्ड भूल गए?",
+    'field.password':"पासवर्ड", 'field.fullName':"पूरा नाम", 'field.mobile':"मोबाइल नंबर",
+    'field.emailOpt':"ईमेल (वैकल्पिक)", 'field.branch':"शाखा", 'field.confirmPassword':"पासवर्ड की पुष्टि करें",
+    'register.title':"अपना खाता बनाएं",
+    'register.sub':"इससे ग्राहक डेटाबेस में एक वास्तविक रिकॉर्ड बनता है और OTP से आपका फ़ोन नंबर सत्यापित होता है।",
+    'register.namePlaceholder':"अपने पहचान पत्र अनुसार", 'register.branchPlaceholder':"जैसे अहमदाबाद मुख्य",
+    'register.pwPlaceholder':"पासवर्ड बनाएं", 'register.pw2Placeholder':"पासवर्ड फिर से दर्ज करें",
+    'register.pwRules':"कम से कम 8 अक्षर, एक बड़ा अक्षर, एक छोटा अक्षर और एक अंक होना चाहिए।",
+    'register.submit':"खाता बनाएं और OTP भेजें",
+    'forgot.title':"अपना पासवर्ड रीसेट करें", 'forgot.sub':"हम आपके पंजीकृत मोबाइल नंबर पर एक बार का कोड भेजेंगे।",
+    'forgot.submit':"OTP भेजें",
+    'otp.title':"अपना फ़ोन सत्यापित करें", 'otp.sub':"आपके पंजीकृत मोबाइल नंबर पर 6-अंकों का कोड भेजा गया है।",
+    'otp.newPw':"नया पासवर्ड", 'otp.newPwPlaceholder':"नया पासवर्ड बनाएं",
+    'otp.devHint':"SMS_PROVIDER=console पर चल रहा बैकएंड टेस्टिंग के लिए OTP बैकएंड टर्मिनल में दिखाता है। वास्तविक SMS पाने के लिए असली प्रोवाइडर सेट करें।",
+    'otp.verify':"सत्यापित करें", 'otp.resend':"कोड फिर से भेजें", 'otp.resent':"कोड फिर भेजा गया ✓",
+    'otp.verifying':"सत्यापित हो रहा है…", 'otp.checking':"जाँच हो रही है…",
+    'success.title':"आप सत्यापित हो गए हैं", 'success.sub':"JanSaarthi AI में आपका स्वागत है।", 'success.continue':"जारी रखें",
+    'shield.note':"पासवर्ड हैश किए जाते हैं (कभी सादे टेक्स्ट में सहेजे नहीं जाते) और हर OTP एक बार उपयोग होने वाला है और कुछ मिनट में समाप्त हो जाता है। यह स्क्रीन एक वास्तविक Node.js बैकएंड और SQLite डेटाबेस से जुड़ी है।",
+    'foot.tag':"JanSaarthi AI · फुल-स्टैक डेमो",
+    'err.phonePw':"अपना 10-अंकों का मोबाइल नंबर और पासवर्ड दर्ज करें।",
+    'err.phoneValid':"एक मान्य 10-अंकों का मोबाइल नंबर दर्ज करें।",
+    'err.pwMismatch':"पासवर्ड मेल नहीं खाते।", 'err.otpLen':"पूरा 6-अंकों का कोड दर्ज करें।",
+    'err.noNewPw':"एक नया पासवर्ड दर्ज करें।",
+    'msg.otpSentTo':"आपके मोबाइल {phone} पर 6-अंकों का कोड भेजा गया है।",
+    'msg.otpSentActivate':"आपका खाता सक्रिय करने के लिए आपके मोबाइल {phone} पर 6-अंकों का कोड भेजा गया है।",
+    'msg.otpMaybeSent':"यदि वह खाता मौजूद है, तो उसे 6-अंकों का कोड भेजा गया है। नीचे कोड और अपना नया पासवर्ड दर्ज करें।",
+    'msg.pwResetDone':"आपका पासवर्ड रीसेट हो गया है। कृपया अपने नए पासवर्ड से साइन इन करें।",
+    'msg.backToSignin':"साइन इन पर वापस जाएं",
+    'msg.loginSuccessOfficer':"पासवर्ड और मोबाइल OTP सत्यापित — वापसी पर स्वागत है, अधिकारी।",
+    'msg.loginSuccessCustomer':"पासवर्ड और मोबाइल OTP सत्यापित — वापसी पर स्वागत है।",
+    'msg.continueOfficer':"अधिकारी कंसोल पर जारी रखें", 'msg.continueCustomer':"अपने JanSaarthi ऐप पर जारी रखें",
+    'msg.attemptsLeft':" ({n} प्रयास शेष)",
+  },
+  mr: {
+    'brand.tag':"सुरक्षित साइन-इन · लाइव्ह बॅकएंड",
+    'role.title':"कोण साइन इन करत आहे?", 'role.sub':"तुमची भूमिका निवडा — तुम्ही वेगवेगळ्या कन्सोलवर जाल.",
+    'role.customer.h':"ग्राहक", 'role.customer.p':"तुमचे JanSaarthi बँकिंग अॅप",
+    'role.bank.h':"बँक अधिकारी", 'role.bank.p':"अधिकारी कन्सोल व रांगा",
+    'btn.continue':"सुरू ठेवा", 'nav.changeRole':"भूमिका बदला",
+    'tab.signin':"साइन इन", 'tab.register':"खाते तयार करा", 'tab.forgot':"पासवर्ड विसरलात",
+    'signin.title':"तुमचा तपशील प्रविष्ट करा", 'signin.2fa':"टू-फॅक्टर पडताळणी",
+    'signin.sub':"पासवर्ड, नंतर तुमच्या खऱ्या मोबाईल नंबरवर पाठवलेला एक-वेळचा कोड.",
+    'signin.idLabel':"नोंदणीकृत मोबाईल नंबर", 'signin.idLabelOfficer':"नोंदणीकृत मोबाईल नंबर (अधिकारी)",
+    'signin.pwPlaceholder':"पासवर्ड टाका", 'signin.forgot':"पासवर्ड विसरलात?",
+    'field.password':"पासवर्ड", 'field.fullName':"पूर्ण नाव", 'field.mobile':"मोबाईल नंबर",
+    'field.emailOpt':"ईमेल (ऐच्छिक)", 'field.branch':"शाखा", 'field.confirmPassword':"पासवर्डची पुष्टी करा",
+    'register.title':"तुमचे खाते तयार करा",
+    'register.sub':"यामुळे ग्राहक डेटाबेसमध्ये एक खरी नोंद तयार होते आणि OTP द्वारे तुमचा फोन नंबर पडताळला जातो.",
+    'register.namePlaceholder':"तुमच्या ओळखपत्राप्रमाणे", 'register.branchPlaceholder':"उदा. अहमदाबाद मुख्य",
+    'register.pwPlaceholder':"पासवर्ड तयार करा", 'register.pw2Placeholder':"पासवर्ड पुन्हा टाका",
+    'register.pwRules':"किमान 8 अक्षरे, एक मोठे अक्षर, एक लहान अक्षर आणि एक आकडा असावा.",
+    'register.submit':"खाते तयार करा आणि OTP पाठवा",
+    'forgot.title':"तुमचा पासवर्ड रीसेट करा", 'forgot.sub':"आम्ही तुमच्या नोंदणीकृत मोबाईल नंबरवर एक-वेळचा कोड पाठवू.",
+    'forgot.submit':"OTP पाठवा",
+    'otp.title':"तुमचा फोन पडताळा", 'otp.sub':"तुमच्या नोंदणीकृत मोबाईल नंबरवर 6-अंकी कोड पाठवला आहे.",
+    'otp.newPw':"नवीन पासवर्ड", 'otp.newPwPlaceholder':"नवीन पासवर्ड तयार करा",
+    'otp.devHint':"SMS_PROVIDER=console सह चालणारा बॅकएंड चाचणीसाठी OTP बॅकएंड टर्मिनलमध्ये दाखवतो. खरा SMS मिळवण्यासाठी खरा प्रोव्हायडर सेट करा.",
+    'otp.verify':"पडताळा", 'otp.resend':"कोड पुन्हा पाठवा", 'otp.resent':"कोड पुन्हा पाठवला ✓",
+    'otp.verifying':"पडताळणी सुरू आहे…", 'otp.checking':"तपासत आहे…",
+    'success.title':"तुम्ही पडताळले गेला आहात", 'success.sub':"JanSaarthi AI मध्ये आपले स्वागत आहे.", 'success.continue':"सुरू ठेवा",
+    'shield.note':"पासवर्ड हॅश केले जातात (कधीही साध्या मजकुरात साठवले जात नाहीत) आणि प्रत्येक OTP एकदाच वापरता येतो व काही मिनिटांत कालबाह्य होतो. ही स्क्रीन खऱ्या Node.js बॅकएंड आणि SQLite डेटाबेसशी जोडलेली आहे.",
+    'foot.tag':"JanSaarthi AI · फुल-स्टॅक डेमो",
+    'err.phonePw':"तुमचा 10-अंकी मोबाईल नंबर आणि पासवर्ड टाका.",
+    'err.phoneValid':"वैध 10-अंकी मोबाईल नंबर टाका.",
+    'err.pwMismatch':"पासवर्ड जुळत नाहीत.", 'err.otpLen':"पूर्ण 6-अंकी कोड टाका.",
+    'err.noNewPw':"नवीन पासवर्ड टाका.",
+    'msg.otpSentTo':"तुमच्या मोबाईल {phone} वर 6-अंकी कोड पाठवला आहे.",
+    'msg.otpSentActivate':"तुमचे खाते सक्रिय करण्यासाठी तुमच्या मोबाईल {phone} वर 6-अंकी कोड पाठवला आहे.",
+    'msg.otpMaybeSent':"ते खाते अस्तित्वात असल्यास, त्याला 6-अंकी कोड पाठवला गेला आहे. खाली कोड आणि नवीन पासवर्ड टाका.",
+    'msg.pwResetDone':"तुमचा पासवर्ड रीसेट झाला आहे. कृपया नवीन पासवर्डने साइन इन करा.",
+    'msg.backToSignin':"साइन इनकडे परत जा",
+    'msg.loginSuccessOfficer':"पासवर्ड आणि मोबाईल OTP पडताळले — पुन्हा स्वागत आहे, अधिकारी.",
+    'msg.loginSuccessCustomer':"पासवर्ड आणि मोबाईल OTP पडताळले — पुन्हा स्वागत आहे.",
+    'msg.continueOfficer':"अधिकारी कन्सोलवर सुरू ठेवा", 'msg.continueCustomer':"माझ्या JanSaarthi अॅपवर सुरू ठेवा",
+    'msg.attemptsLeft':" ({n} प्रयत्न शिल्लक)",
+  },
+  gu: {
+    'brand.tag':"સુરક્ષિત સાઇન-ઇન · લાઇવ બેકએન્ડ",
+    'role.title':"કોણ સાઇન ઇન કરી રહ્યું છે?", 'role.sub':"તમારી ભૂમિકા પસંદ કરો — તમે અલગ કન્સોલ પર જશો.",
+    'role.customer.h':"ગ્રાહક", 'role.customer.p':"તમારી JanSaarthi બેંકિંગ ઍપ",
+    'role.bank.h':"બેંક અધિકારી", 'role.bank.p':"અધિકારી કન્સોલ અને કતારો",
+    'btn.continue':"ચાલુ રાખો", 'nav.changeRole':"ભૂમિકા બદલો",
+    'tab.signin':"સાઇન ઇન", 'tab.register':"ખાતું બનાવો", 'tab.forgot':"પાસવર્ડ ભૂલી ગયા",
+    'signin.title':"તમારી વિગતો દાખલ કરો", 'signin.2fa':"ટુ-ફેક્ટર ચકાસણી",
+    'signin.sub':"પાસવર્ડ, પછી તમારા સાચા મોબાઇલ નંબર પર મોકલેલો એક-વખતનો કોડ.",
+    'signin.idLabel':"નોંધાયેલ મોબાઇલ નંબર", 'signin.idLabelOfficer':"નોંધાયેલ મોબાઇલ નંબર (અધિકારી)",
+    'signin.pwPlaceholder':"પાસવર્ડ દાખલ કરો", 'signin.forgot':"પાસવર્ડ ભૂલી ગયા?",
+    'field.password':"પાસવર્ડ", 'field.fullName':"પૂરું નામ", 'field.mobile':"મોબાઇલ નંબર",
+    'field.emailOpt':"ઇમેઇલ (વૈકલ્પિક)", 'field.branch':"શાખા", 'field.confirmPassword':"પાસવર્ડની ખાતરી કરો",
+    'register.title':"તમારું ખાતું બનાવો",
+    'register.sub':"આ ગ્રાહક ડેટાબેઝમાં એક ખરી નોંધ બનાવે છે અને OTP વડે તમારો ફોન નંબર ચકાસે છે.",
+    'register.namePlaceholder':"તમારા ID મુજબ", 'register.branchPlaceholder':"દા.ત. અમદાવાદ મુખ્ય",
+    'register.pwPlaceholder':"પાસવર્ડ બનાવો", 'register.pw2Placeholder':"પાસવર્ડ ફરીથી દાખલ કરો",
+    'register.pwRules':"ઓછામાં ઓછા 8 અક્ષર, એક મોટો અક્ષર, એક નાનો અક્ષર અને એક આંકડો હોવો જોઈએ.",
+    'register.submit':"ખાતું બનાવો અને OTP મોકલો",
+    'forgot.title':"તમારો પાસવર્ડ રીસેટ કરો", 'forgot.sub':"અમે તમારા નોંધાયેલ મોબાઇલ નંબર પર એક-વખતનો કોડ મોકલીશું.",
+    'forgot.submit':"OTP મોકલો",
+    'otp.title':"તમારો ફોન ચકાસો", 'otp.sub':"તમારા નોંધાયેલ મોબાઇલ નંબર પર 6-અંકનો કોડ મોકલાયો છે.",
+    'otp.newPw':"નવો પાસવર્ડ", 'otp.newPwPlaceholder':"નવો પાસવર્ડ બનાવો",
+    'otp.devHint':"SMS_PROVIDER=console સાથે ચાલતું બેકએન્ડ ટેસ્ટિંગ માટે OTP બેકએન્ડ ટર્મિનલમાં બતાવે છે. ખરો SMS મેળવવા ખરો પ્રોવાઇડર સેટ કરો.",
+    'otp.verify':"ચકાસો", 'otp.resend':"કોડ ફરી મોકલો", 'otp.resent':"કોડ ફરી મોકલાયો ✓",
+    'otp.verifying':"ચકાસણી થઈ રહી છે…", 'otp.checking':"ચકાસી રહ્યા છીએ…",
+    'success.title':"તમે ચકાસાયેલ છો", 'success.sub':"JanSaarthi AI માં તમારું સ્વાગત છે.", 'success.continue':"ચાલુ રાખો",
+    'shield.note':"પાસવર્ડ હેશ કરેલા હોય છે (ક્યારેય સાદા લખાણમાં સંગ્રહાતા નથી) અને દરેક OTP એક-વખત વાપરી શકાય છે અને થોડી મિનિટોમાં સમાપ્ત થાય છે. આ સ્ક્રીન ખરા Node.js બેકએન્ડ અને SQLite ડેટાબેઝ સાથે જોડાયેલ છે.",
+    'foot.tag':"JanSaarthi AI · ફુલ-સ્ટેક ડેમો",
+    'err.phonePw':"તમારો 10-અંકનો મોબાઇલ નંબર અને પાસવર્ડ દાખલ કરો.",
+    'err.phoneValid':"માન્ય 10-અંકનો મોબાઇલ નંબર દાખલ કરો.",
+    'err.pwMismatch':"પાસવર્ડ મેળ ખાતા નથી.", 'err.otpLen':"પૂરો 6-અંકનો કોડ દાખલ કરો.",
+    'err.noNewPw':"નવો પાસવર્ડ દાખલ કરો.",
+    'msg.otpSentTo':"તમારા મોબાઇલ {phone} પર 6-અંકનો કોડ મોકલાયો છે.",
+    'msg.otpSentActivate':"તમારું ખાતું સક્રિય કરવા તમારા મોબાઇલ {phone} પર 6-અંકનો કોડ મોકલાયો છે.",
+    'msg.otpMaybeSent':"જો તે ખાતું અસ્તિત્વમાં હોય, તો તેને 6-અંકનો કોડ મોકલાયો છે. નીચે કોડ અને નવો પાસવર્ડ દાખલ કરો.",
+    'msg.pwResetDone':"તમારો પાસવર્ડ રીસેટ થઈ ગયો છે. કૃપા કરીને નવા પાસવર્ડ સાથે સાઇન ઇન કરો.",
+    'msg.backToSignin':"સાઇન ઇન પર પાછા જાઓ",
+    'msg.loginSuccessOfficer':"પાસવર્ડ અને મોબાઇલ OTP ચકાસાયા — ફરી સ્વાગત છે, અધિકારી.",
+    'msg.loginSuccessCustomer':"પાસવર્ડ અને મોબાઇલ OTP ચકાસાયા — ફરી સ્વાગત છે.",
+    'msg.continueOfficer':"અધિકારી કન્સોલ પર ચાલુ રાખો", 'msg.continueCustomer':"મારી JanSaarthi ઍપ પર ચાલુ રાખો",
+    'msg.attemptsLeft':" ({n} પ્રયત્નો બાકી)",
+  }
+};
+let currentLang = localStorage.getItem('jansaarthi_lang') || 'en';
+
+function t(key, vars){
+  let s = (I18N[currentLang] && I18N[currentLang][key]) || I18N.en[key] || key;
+  if(vars){ Object.keys(vars).forEach(k=>{ s = s.replace('{'+k+'}', vars[k]); }); }
+  return s;
+}
+
+function applyI18n(){
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    el.innerHTML = t(el.getAttribute('data-i18n'));
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el=>{
+    el.setAttribute('placeholder', t(el.getAttribute('data-i18n-placeholder')));
+  });
+  // re-apply role-dependent dynamic label
+  if(role){
+    document.getElementById('signin-id-label').textContent = (role === 'bank') ? t('signin.idLabelOfficer') : t('signin.idLabel');
+  }
+}
+
+function setLang(l){
+  currentLang = l;
+  localStorage.setItem('jansaarthi_lang', l);
+  document.documentElement.lang = l;
+  document.body.classList.remove('lang-hi','lang-mr','lang-gu');
+  if(l !== 'en') document.body.classList.add('lang-'+l);
+  ['en','hi','mr','gu'].forEach(code=>{
+    document.getElementById('lb-'+code).classList.toggle('active', code===l);
+  });
+  applyI18n();
+}
+
+/* ============== APP LOGIC (unchanged behaviour, now language-aware) ============== */
+let role = null;           // 'customer' | 'bank'
+let apiRole = null;        // 'customer' | 'officer'
+let activeTab = 'signin';
+let otpPurpose = null;     // 'register' | 'login' | 'reset'
+let otpPhone = null;
+
+function pickRole(r){
+  role = r;
+  apiRole = (r === 'bank') ? 'officer' : 'customer';
+  document.getElementById('role-customer').classList.toggle('selected', r==='customer');
+  document.getElementById('role-bank').classList.toggle('selected', r==='bank');
+  document.getElementById('role-continue').disabled = false;
+  document.getElementById('reg-branch-field').style.display = (r==='bank') ? 'block' : 'none';
+  document.getElementById('signin-id-label').textContent = (r === 'bank') ? t('signin.idLabelOfficer') : t('signin.idLabel');
+}
+
+function goScreen(name){
+  ['step-role','screen-auth','screen-otp','screen-success'].forEach(id=>{
+    document.getElementById(id).style.display = 'none';
+  });
+  if(name === 'role') document.getElementById('step-role').style.display = 'block';
+  if(name === 'auth') document.getElementById('screen-auth').style.display = 'block';
+  if(name === 'otp') document.getElementById('screen-otp').style.display = 'block';
+  if(name === 'success') document.getElementById('screen-success').style.display = 'block';
+}
+
+function setTab(tab){
+  activeTab = tab;
+  ['signin','register','forgot'].forEach(t=>{
+    document.getElementById('tab-'+t).classList.toggle('active', t===tab);
+    document.getElementById('pane-'+t).style.display = (t===tab) ? 'block' : 'none';
+  });
+  hideError('signin-error'); hideError('register-error'); hideError('forgot-error');
+}
+
+function showError(id, msg){
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+function hideError(id){ document.getElementById(id).style.display = 'none'; }
+
+function digitsOnly(v){ return (v||'').replace(/\D/g,''); }
+
+/* ---------------- SIGN IN ---------------- */
+async function doLogin(){
+  hideError('signin-error');
+  document.getElementById('signin-lock').style.display = 'none';
+  const phone = digitsOnly(document.getElementById('signin-phone').value);
+  const password = document.getElementById('signin-password').value;
+  if(phone.length !== 10 || !password){
+    showError('signin-error', t('err.phonePw'));
+    return;
+  }
+  try{
+    const btn = document.getElementById('signin-submit');
+    btn.disabled = true; btn.textContent = t('otp.checking');
+    const data = await Api.login({ role: apiRole, phone, password });
+    btn.disabled = false; btn.textContent = t('btn.continue');
+    if(data.otpRequired){
+      otpPurpose = 'login'; otpPhone = phone;
+      openOtpScreen(t('msg.otpSentTo', {phone: data.phoneMasked}));
+    }
+  }catch(err){
+    document.getElementById('signin-submit').disabled = false;
+    document.getElementById('signin-submit').textContent = t('btn.continue');
+    if(err.status === 423){
+      document.getElementById('signin-lock').style.display = 'block';
+      document.getElementById('signin-lock').textContent = '🔒 ' + err.message;
+    } else {
+      let msg = err.message;
+      if(err.data && typeof err.data.attemptsLeft === 'number'){
+        msg += t('msg.attemptsLeft', {n: err.data.attemptsLeft});
+      }
+      showError('signin-error', msg);
+    }
+  }
+}
+
+/* ---------------- REGISTER ---------------- */
+async function doRegister(){
+  hideError('register-error');
+  const fullName = document.getElementById('reg-name').value.trim();
+  const phone = digitsOnly(document.getElementById('reg-phone').value);
+  const email = document.getElementById('reg-email').value.trim();
+  const branch = document.getElementById('reg-branch').value.trim();
+  const password = document.getElementById('reg-password').value;
+  const password2 = document.getElementById('reg-password2').value;
+
+  if(password !== password2){
+    showError('register-error', t('err.pwMismatch'));
+    return;
+  }
+  try{
+    const data = await Api.register({ role: apiRole, fullName, phone, email, password, branch });
+    otpPurpose = 'register'; otpPhone = phone;
+    openOtpScreen(t('msg.otpSentActivate', {phone: data.phoneMasked}));
+  }catch(err){
+    showError('register-error', err.message);
+  }
+}
+
+/* ---------------- FORGOT PASSWORD ---------------- */
+async function doForgotPassword(){
+  hideError('forgot-error');
+  const phone = digitsOnly(document.getElementById('forgot-phone').value);
+  if(phone.length !== 10){
+    showError('forgot-error', t('err.phoneValid'));
+    return;
+  }
+  try{
+    await Api.forgotPassword({ role: apiRole, phone });
+    otpPurpose = 'reset'; otpPhone = phone;
+    openOtpScreen(t('msg.otpMaybeSent'));
+  }catch(err){
+    showError('forgot-error', err.message);
+  }
+}
+
+/* ---------------- OTP SCREEN (shared) ---------------- */
+function openOtpScreen(subText){
+  document.getElementById('otp-sub').textContent = subText;
+  document.getElementById('otp-newpw-field').style.display = (otpPurpose === 'reset') ? 'block' : 'none';
+  document.querySelectorAll('.otp-box').forEach(b=>b.value='');
+  document.getElementById('otp-newpw').value = '';
+  hideError('otp-error');
+  goScreen('otp');
+  document.querySelector('.otp-box').focus();
+}
+
+function wireBoxGroup(selector){
+  const boxes = Array.from(document.querySelectorAll(selector));
+  boxes.forEach((b,i)=>{
+    b.addEventListener('input', ()=>{
+      b.value = b.value.replace(/[^0-9]/g,'');
+      if(b.value && boxes[i+1]) boxes[i+1].focus();
+    });
+    b.addEventListener('keydown', (e)=>{
+      if(e.key==='Backspace' && !b.value && boxes[i-1]) boxes[i-1].focus();
+    });
+  });
+}
+wireBoxGroup('.otp-box');
+
+async function submitOtp(){
+  hideError('otp-error');
+  const code = Array.from(document.querySelectorAll('.otp-box')).map(b=>b.value).join('');
+  if(code.length !== 6){
+    showError('otp-error', t('err.otpLen'));
+    return;
+  }
+  const btn = document.getElementById('otp-submit');
+  btn.disabled = true; btn.textContent = t('otp.verifying');
+  try{
+    if(otpPurpose === 'register'){
+      const data = await Api.verifyRegistrationOtp({ phone: otpPhone, code });
+      onAuthSuccess(data);
+    } else if(otpPurpose === 'login'){
+      const data = await Api.verifyLoginOtp({ role: apiRole, phone: otpPhone, code });
+      onAuthSuccess(data);
+    } else if(otpPurpose === 'reset'){
+      const newPassword = document.getElementById('otp-newpw').value;
+      if(!newPassword){ throw new Error(t('err.noNewPw')); }
+      await Api.resetPassword({ role: apiRole, phone: otpPhone, code, newPassword });
+      goScreen('success');
+      document.getElementById('success-sub').textContent = t('msg.pwResetDone');
+      const link = document.getElementById('success-link');
+      link.textContent = t('msg.backToSignin');
+      link.href = '#';
+      link.onclick = (e)=>{ e.preventDefault(); goScreen('auth'); setTab('signin'); };
+    }
+  }catch(err){
+    showError('otp-error', err.message);
+  }finally{
+    btn.disabled = false; btn.textContent = t('otp.verify');
+  }
+}
+
+function onAuthSuccess(data){
+  localStorage.setItem('jansaarthi_token', data.token);
+  localStorage.setItem('jansaarthi_user', JSON.stringify(data.user));
+  goScreen('success');
+  const link = document.getElementById('success-link');
+  if(role === 'bank'){
+    link.href = 'jansaarthi_bank_dashboard.html';
+    link.textContent = t('msg.continueOfficer');
+    document.getElementById('success-sub').textContent = t('msg.loginSuccessOfficer');
+  } else {
+    link.href = 'jansaarthi_app.html';
+    link.textContent = t('msg.continueCustomer');
+    document.getElementById('success-sub').textContent = t('msg.loginSuccessCustomer');
+  }
+  link.onclick = null;
+}
+
+async function resendOtp(){
+  const btn = document.getElementById('resend-btn');
+  try{
+    await Api.resendOtp({ phone: otpPhone, purpose: otpPurpose });
+    btn.textContent = t('otp.resent');
+    setTimeout(()=>{ btn.textContent = t('otp.resend'); }, 2200);
+  }catch(err){
+    showError('otp-error', err.message);
+  }
+}
+
+setLang(currentLang);
+</script>
+
+<!-- Jan's Voice — screen reader / voice navigator -->
+<button id="jv-listen-btn" onclick="jvToggleRead(event)" aria-label="Listen to this screen"
+  style="position:fixed; right:20px; bottom:24px; z-index:500; width:52px; height:52px;
+  border-radius:50%; border:none; cursor:pointer; background:linear-gradient(135deg,#FF6B4A,#E14E30);
+  color:#fff; font-size:22px; box-shadow:0 8px 20px rgba(225,78,48,.4);
+  display:flex; align-items:center; justify-content:center;">🔊</button>
+<script>
+(function(){
+  if(!('speechSynthesis' in window)){ return; }
+  var synth = window.speechSynthesis;
+  var speaking = false;
+  var langVoiceMap = {en:'en-IN', hi:'hi-IN', mr:'mr-IN', gu:'gu-IN'};
+
+  function currentLangCode(){
+    if(document.body.classList.contains('lang-hi')) return 'hi';
+    if(document.body.classList.contains('lang-mr')) return 'mr';
+    if(document.body.classList.contains('lang-gu')) return 'gu';
+    return 'en';
+  }
+  function activeContainer(){
+    return document.querySelector('.screen.active') ||
+           document.querySelector('.page.active') ||
+           Array.prototype.find.call(document.querySelectorAll('.step'), function(el){ return el.offsetParent !== null; }) ||
+           document.querySelector('.phone') || document.body;
+  }
+  function setBtn(isSpeaking){
+    var b = document.getElementById('jv-listen-btn');
+    if(!b) return;
+    b.innerHTML = isSpeaking ? '⏹' : '🔊';
+    b.style.background = isSpeaking ? '#C0533E' : 'linear-gradient(135deg,#FF6B4A,#E14E30)';
+  }
+  function stop(){
+    synth.cancel();
+    speaking = false;
+    setBtn(false);
+  }
+  window.jvToggleRead = function(e){
+    if(e) e.stopPropagation();
+    if(speaking){ stop(); return; }
+    var container = activeContainer();
+    var text = (container.innerText || container.textContent || '').trim();
+    if(!text){ return; }
+    var utter = new SpeechSynthesisUtterance(text);
+    utter.lang = langVoiceMap[currentLangCode()] || 'en-IN';
+    utter.rate = 0.92;
+    utter.onend = function(){ speaking = false; setBtn(false); };
+    utter.onerror = function(){ speaking = false; setBtn(false); };
+    synth.cancel();
+    synth.speak(utter);
+    speaking = true;
+    setBtn(true);
+  };
+  document.addEventListener('click', function(e){
+    if(speaking && e.target.id !== 'jv-listen-btn'){ stop(); }
+  }, true);
+})();
+</script>
+
+<script src="assistant-widget-auth.js"></script>
+</body>
+</html>
